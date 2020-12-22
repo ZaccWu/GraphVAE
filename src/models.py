@@ -1,4 +1,4 @@
-from src.layers import *
+from src.networkUnit import *
 import tensorflow as tf
 
 class GCNModelAE():
