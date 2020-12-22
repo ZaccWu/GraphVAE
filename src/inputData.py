@@ -47,7 +47,7 @@ def loadData(dataset):
     adj = nx.adjacency_matrix(graph)
     return adj, features
 
-def load_label(dataset):
+def loadLabel(dataset):
     """ Load node-level labels from tkipf/gae input files
     :param dataset: 'cora', 'citeseer' or 'pubmed' graph dataset.
     :return: n-dim array of node labels (used for clustering)

@@ -2,7 +2,7 @@ import numpy as np
 import scipy.sparse as sp
 import tensorflow as tf
 
-def sparse_to_tuple(sparse_mx):
+def sparseToTuple(sparse_mx):
     if not sp.isspmatrix_coo(sparse_mx):
         sparse_mx = sparse_mx.tocoo()
     coords = np.vstack((sparse_mx.row, sparse_mx.col)).transpose()
@@ -10,14 +10,14 @@ def sparse_to_tuple(sparse_mx):
     shape = sparse_mx.shape
     return coords, values, shape
 
-def preprocess_graph(adj):
+def preprocessGraph(adj):
     adj = sp.coo_matrix(adj)
     adj_ = adj + sp.eye(adj.shape[0])
     degree_mat_inv_sqrt = sp.diags(np.power(np.array(adj_.sum(1)), -0.5).flatten())
     adj_normalized = adj_.dot(degree_mat_inv_sqrt).transpose().dot(degree_mat_inv_sqrt)
-    return sparse_to_tuple(adj_normalized)
+    return sparseToTuple(adj_normalized)
 
-def construct_feed_dict(adj_normalized, adj, features, placeholders):
+def constructFeedDict(adj_normalized, adj, features, placeholders):
     # Construct feed dictionary
     feed_dict = dict()
     feed_dict.update({placeholders['features']: features})
@@ -25,7 +25,7 @@ def construct_feed_dict(adj_normalized, adj, features, placeholders):
     feed_dict.update({placeholders['adj_orig']: adj})
     return feed_dict
 
-def mask_test_edges(adj, test_percent=10., val_percent=5.):
+def maskTestEdges(adj, test_percent=10., val_percent=5.):
     """ Randomly removes some edges from original graph to create
     test and validation sets for link prediction task
     :param adj: complete sparse adjacency matrix of the graph
@@ -39,7 +39,7 @@ def mask_test_edges(adj, test_percent=10., val_percent=5.):
     # Check that diag is zero:
     assert adj.diagonal().sum() == 0
 
-    edges_positive, _, _ = sparse_to_tuple(adj)
+    edges_positive, _, _ = sparseToTuple(adj)
     # Filtering out edges from lower triangle of adjacency matrix
     edges_positive = edges_positive[edges_positive[:,1] > edges_positive[:,0],:]
     # val_edges, val_edges_false, test_edges, test_edges_false = None, None, None, None
@@ -70,7 +70,7 @@ def mask_test_edges(adj, test_percent=10., val_percent=5.):
     # 5. remove any duplicate elements if there are any
     # 6. remove any diagonal elements
     # 7. if we don't have enough edges, repeat this process until we get enough
-    positive_idx, _, _ = sparse_to_tuple(adj) # [i,j] coord pairs for all true edges
+    positive_idx, _, _ = sparseToTuple(adj) # [i,j] coord pairs for all true edges
     positive_idx = positive_idx[:,0]*adj.shape[0] + positive_idx[:,1] # linear indices
     test_edges_false = np.empty((0,2),dtype='int64')
     idx_test_edges_false = np.empty((0,),dtype='int64')

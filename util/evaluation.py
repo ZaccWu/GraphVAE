@@ -11,7 +11,7 @@ def sigmoid(x):
     """
     return 1 / (1 + np.exp(-x))
 
-def get_roc_score(edges_pos, edges_neg, emb):
+def getRocScore(edges_pos, edges_neg, emb):
     """ Link Prediction: computes AUC ROC and AP scores from embeddings vectors,
     and from ground-truth lists of positive and negative node pairs
     :param edges_pos: list of positive node pairs
@@ -37,7 +37,7 @@ def get_roc_score(edges_pos, edges_neg, emb):
     ap_score = average_precision_score(labels_all, preds_all)
     return roc_score, ap_score
 
-def clustering_latent_space(emb, label, nb_clusters=None):
+def clusteringLatentSpace(emb, label, nb_clusters=None):
     """ Node Clustering: computes Adjusted Mutual Information score from a
     K-Means clustering of nodes in latent embedding space
     :param emb: n*d matrix of embedding vectors for all graph nodes

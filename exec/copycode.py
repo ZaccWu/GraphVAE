@@ -1,7 +1,7 @@
 from __future__ import division
 from __future__ import print_function
-from util.evaluation import get_roc_score, clustering_latent_space
-from src.input_data import loadData, load_label
+from util.evaluation import getRocScore, clusteringLatentSpace
+from src.inputData import loadData, loadLabel
 from src.kcore import computeKcore, expandEmbedding
 from src.models import GCNModelAE, GCNModelVAE, LinearModelAE, LinearModelVAE, DeepGCNModelAE, DeepGCNModelVAE
 from src.optimizer import OptimizerAE, OptimizerVAE
@@ -41,25 +41,23 @@ param = {
 }
 
 # Lists to collect average results
-if param['task'] == 'link_prediction':
-    mean_roc = []
-    mean_ap = []
-elif param['task'] == 'node_clustering':
-    mean_mutual_info = []
-if param['kcore']:
-    mean_time_kcore = []
-    mean_time_train = []
-    mean_time_expand = []
-    mean_core_size = []
-mean_time = []
+
+meanROC = []   # link prediction
+meanAP = []    # link prediction
+meanMutualInfo = []   # node clustering
+meanTimeKcore = []    # kcore
+meanTimeTrain = []    # kcore
+meanTimeExpand = []   # kcore
+meanCoreSize = []     # kcore
+meanTime = []  # general
 
 # Load graph dataset
 if param['verbose']:
     print("Loading data...")
-adj_init, features_init = loadData(param['dataset'])
+adjInit, featuresInit = loadData(param['dataset'])
 # Load ground-truth labels for node clustering task
 if param['task'] == 'node_clustering':
-    labels = load_label(param['dataset'])
+    labels = loadLabel(param['dataset'])
 
 ###### Run the Experiments ######
 # The entire training+test process is repeated nb_run times
@@ -68,15 +66,15 @@ for i in range(param['nb_run']):
         if param['verbose']:
             print("Masking test edges...")
         # Edge Masking for Link Prediction: compute Train/Validation/Test set
-        adj, valEdges, valEdgesFalse, testEdges, testEdgesFalse = mask_test_edges(adj_init, param['prop_test'], param['prop_val'])
+        adj, valEdges, valEdgesFalse, testEdges, testEdgesFalse = maskTestEdges(adjInit, param['prop_test'], param['prop_val'])
     elif param['task'] == 'node_clustering':
-        adj_tri = sp.triu(adj_init)
-        adj = adj_tri + adj_tri.T
+        adjTri = sp.triu(adjInit)
+        adj = adjTri + adjTri.T
     else:
         raise ValueError('Undefined task!')
 
     # Start computation of running times
-    t_start = time.time()
+    tStart = time.time()
 
     # Degeneracy Framework / K-Core Decomposition
     if param['kcore']:
@@ -84,29 +82,29 @@ for i in range(param['nb_run']):
             print("Starting k-core decomposition of the graph")
         # Save adjacency matrix of un-decomposed graph
         # (needed to embed nodes that are not in k-core, after GAE training)
-        adj_orig = adj
+        adjOrig = adj
         # Get the (smaller) adjacency matrix of the k-core subgraph,
         # and the corresponding nodes
-        adj, nodes_kcore = computeKcore(adj, param['k'])
+        adj, nodesKcore = computeKcore(adj, param['k'])
         # Get the (smaller) feature matrix of the nb_core graph
         if param['features']:
-            features = features_init[nodes_kcore,:]
+            features = featuresInit[nodesKcore, :]
         # Flag to compute k-core decomposition's running time
-        t_core = time.time()
+        tCore = time.time()
     elif param['features']:
-        features = features_init
+        features = featuresInit
 
     # Preprocessing and initialization
     if param['verbose']:
         print("Preprocessing and Initializing...")
     # Compute number of nodes
-    num_nodes = adj.shape[0]
+    numNodes = adj.shape[0]
     # If features are not used, replace feature matrix by identity matrix
     if not param['features']:
         features = sp.identity(adj.shape[0])
     # Preprocessing on node features
-    features = sparse_to_tuple(features)
-    num_features = features[2][1]
+    features = sparseToTuple(features)
+    numFeatures = features[2][1]
     features_nonzero = features[1].shape[0]
 
     # Define placeholders
@@ -121,30 +119,30 @@ for i in range(param['nb_run']):
     model = None
     if param['model'] == 'gcn_ae':
         # Standard Graph Autoencoder
-        model = GCNModelAE(param, placeholders, num_features, features_nonzero)
+        model = GCNModelAE(param, placeholders, numFeatures, features_nonzero)
     elif param['model'] == 'gcn_vae':
         # Standard Graph Variational Autoencoder
-        model = GCNModelVAE(param, placeholders, num_features, num_nodes,
+        model = GCNModelVAE(param, placeholders, numFeatures, numNodes,
                             features_nonzero)
     elif param['model'] == 'linear_ae':
         # Linear Graph Autoencoder
-        model = LinearModelAE(param, placeholders, num_features, features_nonzero)
+        model = LinearModelAE(param, placeholders, numFeatures, features_nonzero)
     elif param['model'] == 'linear_vae':
         # Linear Graph Variational Autoencoder
-        model = LinearModelVAE(param, placeholders, num_features, num_nodes,
+        model = LinearModelVAE(param, placeholders, numFeatures, numNodes,
                                features_nonzero)
     elif param['model'] == 'deep_gcn_ae':
         # Deep (3-layer GCN) Graph Autoencoder
-        model = DeepGCNModelAE(param, placeholders, num_features, features_nonzero)
+        model = DeepGCNModelAE(param, placeholders, numFeatures, features_nonzero)
     elif param['model'] == 'deep_gcn_vae':
         # Deep (3-layer GCN) Graph Variational Autoencoder
-        model = DeepGCNModelVAE(param, placeholders, num_features, num_nodes,
+        model = DeepGCNModelVAE(param, placeholders, numFeatures, numNodes,
                                 features_nonzero)
     else:
         raise ValueError('Undefined model!')
 
     # Optimizer
-    pos_weight = float(adj.shape[0] * adj.shape[0] - adj.sum()) / adj.sum()
+    posWeight = float(adj.shape[0] * adj.shape[0] - adj.sum()) / adj.sum()
     norm = adj.shape[0] * adj.shape[0] / float((adj.shape[0] * adj.shape[0] - adj.sum()) * 2)
     with tf.name_scope('optimizer'):
         # Optimizer for Non-Variational Autoencoders
@@ -153,7 +151,7 @@ for i in range(param['nb_run']):
                               preds = model.reconstructions,
                               labels = tf.reshape(tf.sparse_tensor_to_dense(placeholders['adj_orig'],
                                                                             validate_indices = False), [-1]),
-                              pos_weight = pos_weight,
+                              pos_weight = posWeight,
                               norm = norm)
         # Optimizer for Variational Autoencoders
         elif param['model'] in ('gcn_vae', 'linear_vae', 'deep_gcn_vae'):
@@ -162,13 +160,13 @@ for i in range(param['nb_run']):
                                labels = tf.reshape(tf.sparse_tensor_to_dense(placeholders['adj_orig'],
                                                                              validate_indices = False), [-1]),
                                model = model,
-                               num_nodes = num_nodes,
-                               pos_weight = pos_weight,
+                               num_nodes = numNodes,
+                               pos_weight = posWeight,
                                norm = norm)
 
     # Normalization and preprocessing on adjacency matrix
-    adj_norm = preprocess_graph(adj)
-    adj_label = sparse_to_tuple(adj + sp.eye(adj.shape[0]))
+    adjNorm = preprocessGraph(adj)
+    adjLabel = sparseToTuple(adj + sp.eye(adj.shape[0]))
 
     # Initialize TF session
     sess = tf.Session()
@@ -182,12 +180,12 @@ for i in range(param['nb_run']):
         # Flag to compute running time for each epoch
         t = time.time()
         # Construct feed dictionary
-        feed_dict = construct_feed_dict(adj_norm, adj_label, features,
-                                        placeholders)
-        feed_dict.update({placeholders['dropout']: param['dropout']})
+        feedDict = constructFeedDict(adjNorm, adjLabel, features,
+                                     placeholders)
+        feedDict.update({placeholders['dropout']: param['dropout']})
         # Weights update
         outs = sess.run([opt.opt_op, opt.cost, opt.accuracy],
-                        feed_dict = feed_dict)
+                        feed_dict = feedDict)
         # Compute average loss
         avg_cost = outs[1]
         if param['verbose']:
@@ -196,20 +194,20 @@ for i in range(param['nb_run']):
                   "time=", "{:.5f}".format(time.time() - t))
             # Validation, for Link Prediction
             if not param['kcore'] and param['validation'] and param['task'] == 'link_prediction':
-                feed_dict.update({placeholders['dropout']: 0})
-                emb = sess.run(model.z_mean, feed_dict = feed_dict)
-                feed_dict.update({placeholders['dropout']: param['dropout']})
-                val_roc, val_ap = get_roc_score(valEdges, valEdgesFalse, emb)
+                feedDict.update({placeholders['dropout']: 0})
+                emb = sess.run(model.z_mean, feed_dict = feedDict)
+                feedDict.update({placeholders['dropout']: param['dropout']})
+                val_roc, val_ap = getRocScore(valEdges, valEdgesFalse, emb)
                 print("val_roc=", "{:.5f}".format(val_roc), "val_ap=", "{:.5f}".format(val_ap))
 
     # Flag to compute Graph AE/VAE training time
-    t_model = time.time()
+    tModel = time.time()
 
 
     # Compute embedding
 
     # Get embedding from model
-    emb = sess.run(model.z_mean, feed_dict = feed_dict)
+    emb = sess.run(model.z_mean, feed_dict = feedDict)
 
     # If k-core is used, only part of the nodes from the original
     # graph are embedded. The remaining ones are projected in the
@@ -218,18 +216,18 @@ for i in range(param['nb_run']):
         if param['verbose']:
             print("Propagation to remaining nodes...")
         # Project remaining nodes in latent space
-        emb = expandEmbedding(adj_orig, emb, nodes_kcore, param['nb_iterations'])
+        emb = expandEmbedding(adjOrig, emb, nodesKcore, param['nb_iterations'])
         # Compute mean running times for K-Core, GAE Train and Propagation steps
-        mean_time_expand.append(time.time() - t_model)
-        mean_time_train.append(t_model - t_core)
-        mean_time_kcore.append(t_core - t_start)
+        meanTimeExpand.append(time.time() - tModel)
+        meanTimeTrain.append(tModel - tCore)
+        meanTimeKcore.append(tCore - tStart)
         # Compute mean size of K-Core graph
         # Note: size is fixed if task is node clustering, but will vary if
         # task is link prediction due to edge masking
-        mean_core_size.append(len(nodes_kcore))
+        meanCoreSize.append(len(nodesKcore))
 
     # Compute mean total running time
-    mean_time.append(time.time() - t_start)
+    meanTime.append(time.time() - tStart)
 
 
     # Test model
@@ -238,17 +236,17 @@ for i in range(param['nb_run']):
     # Link Prediction: classification edges/non-edges
     if param['task'] == 'link_prediction':
         # Get ROC and AP scores
-        roc_score, ap_score = get_roc_score(testEdges, testEdgesFalse, emb)
+        rocScore, apScore = getRocScore(testEdges, testEdgesFalse, emb)
         # Report scores
-        mean_roc.append(roc_score)
-        mean_ap.append(ap_score)
+        meanROC.append(rocScore)
+        meanAP.append(apScore)
 
     # Node Clustering: K-Means clustering in embedding space
     elif param['task'] == 'node_clustering':
         # Clustering in embedding space
-        mi_score = clustering_latent_space(emb, labels)
+        miScore = clusteringLatentSpace(emb, labels)
         # Report Adjusted Mutual Information (AMI)
-        mean_mutual_info.append(mi_score)
+        meanMutualInfo.append(miScore)
 
 
 ###### Report Final Results ######
@@ -258,30 +256,30 @@ print("\nTest results for", param['model'], "model on", param['dataset'], "on", 
       "___________________________________________________\n")
 
 if param['task'] == 'link_prediction':
-    print("AUC scores\n", mean_roc)
-    print("Mean AUC score: ", np.mean(mean_roc), "\nStd of AUC scores: ", np.std(mean_roc), "\n \n")
+    print("AUC scores\n", meanROC)
+    print("Mean AUC score: ", np.mean(meanROC), "\nStd of AUC scores: ", np.std(meanROC), "\n \n")
 
-    print("AP scores\n", mean_ap)
-    print("Mean AP score: ", np.mean(mean_ap), "\nStd of AP scores: ", np.std(mean_ap), "\n \n")
+    print("AP scores\n", meanAP)
+    print("Mean AP score: ", np.mean(meanAP), "\nStd of AP scores: ", np.std(meanAP), "\n \n")
 
 else:
-    print("Adjusted MI scores\n", mean_mutual_info)
-    print("Mean Adjusted MI score: ", np.mean(mean_mutual_info), "\nStd of Adjusted MI scores: ", np.std(mean_mutual_info), "\n \n")
+    print("Adjusted MI scores\n", meanMutualInfo)
+    print("Mean Adjusted MI score: ", np.mean(meanMutualInfo), "\nStd of Adjusted MI scores: ", np.std(meanMutualInfo), "\n \n")
 
-print("Total Running times\n", mean_time)
-print("Mean total running time: ", np.mean(mean_time), "\nStd of total running time: ", np.std(mean_time), "\n \n")
+print("Total Running times\n", meanTime)
+print("Mean total running time: ", np.mean(meanTime), "\nStd of total running time: ", np.std(meanTime), "\n \n")
 
 if param['kcore']:
     print("Details on degeneracy framework, with k =", param['k'], ": \n \n")
 
-    print("Running times for k-core decomposition\n", mean_time_kcore)
-    print("Mean: ", np.mean(mean_time_kcore), "\nStd: ", np.std(mean_time_kcore), "\n \n")
+    print("Running times for k-core decomposition\n", meanTimeKcore)
+    print("Mean: ", np.mean(meanTimeKcore), "\nStd: ", np.std(meanTimeKcore), "\n \n")
 
-    print("Running times for autoencoder training\n", mean_time_train)
-    print("Mean: ", np.mean(mean_time_train), "\nStd: ", np.std(mean_time_train), "\n \n")
+    print("Running times for autoencoder training\n", meanTimeTrain)
+    print("Mean: ", np.mean(meanTimeTrain), "\nStd: ", np.std(meanTimeTrain), "\n \n")
 
-    print("Running times for propagation\n", mean_time_expand)
-    print("Mean: ", np.mean(mean_time_expand), "\nStd: ", np.std(mean_time_expand), "\n \n")
+    print("Running times for propagation\n", meanTimeExpand)
+    print("Mean: ", np.mean(meanTimeExpand), "\nStd: ", np.std(meanTimeExpand), "\n \n")
 
-    print("Sizes of k-core subgraph\n", mean_core_size)
-    print("Mean: ", np.mean(mean_core_size), "\nStd: ", np.std(mean_core_size), "\n \n")
+    print("Sizes of k-core subgraph\n", meanCoreSize)
+    print("Mean: ", np.mean(meanCoreSize), "\nStd: ", np.std(meanCoreSize), "\n \n")
