@@ -11,43 +11,43 @@ def sigmoid(x):
     """
     return 1 / (1 + np.exp(-x))
 
-def getRocScore(edges_pos, edges_neg, emb):
+def getRocScore(edgesPos, edgesNeg, emb):
     """ Link Prediction: computes AUC ROC and AP scores from embeddings vectors,
     and from ground-truth lists of positive and negative node pairs
-    :param edges_pos: list of positive node pairs
-    :param edges_neg: list of negative node pairs
+    :param edgesPos: list of positive node pairs
+    :param edgesNeg: list of negative node pairs
     :param emb: n*d matrix of embedding vectors for all graph nodes
     :return: Area Under ROC Curve (AUC ROC) and Average Precision (AP) scores
     """
     preds = []
-    preds_neg = []
-    for e in edges_pos:
+    predsNeg = []
+    for e in edgesPos:
         # Link Prediction on positive pairs
         preds.append(sigmoid(emb[e[0],:].dot(emb[e[1],:].T)))
-    for e in edges_neg:
+    for e in edgesNeg:
         # Link Prediction on negative pairs
-        preds_neg.append(sigmoid(emb[e[0],:].dot(emb[e[1],:].T)))
+        predsNeg.append(sigmoid(emb[e[0],:].dot(emb[e[1],:].T)))
 
     # Stack all predictions and labels
-    preds_all = np.hstack([preds, preds_neg])
-    labels_all = np.hstack([np.ones(len(preds)), np.zeros(len(preds_neg))])
+    predsAll = np.hstack([preds, predsNeg])
+    labelsAll = np.hstack([np.ones(len(preds)), np.zeros(len(predsNeg))])
 
     # Computes metrics
-    roc_score = roc_auc_score(labels_all, preds_all)
-    ap_score = average_precision_score(labels_all, preds_all)
-    return roc_score, ap_score
+    rocScore = roc_auc_score(labelsAll, predsAll)
+    apScore = average_precision_score(labelsAll, predsAll)
+    return rocScore, apScore
 
-def clusteringLatentSpace(emb, label, nb_clusters=None):
+def clusteringLatentSpace(emb, label, nbClusters=None):
     """ Node Clustering: computes Adjusted Mutual Information score from a
     K-Means clustering of nodes in latent embedding space
     :param emb: n*d matrix of embedding vectors for all graph nodes
     :param label: ground-truth node labels
-    :param nb_clusters: int number of ground-truth communities in graph
+    :param nbClusters: int number of ground-truth communities in graph
     :return: Adjusted Mutual Information (AMI) score
     """
-    if nb_clusters is None:
-        nb_clusters = len(np.unique(label))
+    if nbClusters is None:
+        nbClusters = len(np.unique(label))
     # K-Means Clustering
-    clustering_pred = KMeans(n_clusters = nb_clusters, init = 'k-means++').fit(emb).labels_
+    clusteringPred = KMeans(n_clusters = nbClusters, init ='k-means++').fit(emb).labels_
     # Compute metrics
-    return adjusted_mutual_info_score(label, clustering_pred)
+    return adjusted_mutual_info_score(label, clusteringPred)

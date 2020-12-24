@@ -2,35 +2,35 @@ from __future__ import division
 from src.initializations import weightVariableGlorot
 import tensorflow as tf
 
-_LAYER_UIDS = {} # Global unique layer ID dictionary for layer name assignment
+LAYERUIDS = {} # Global unique layer ID dictionary for layer name assignment
 
-def getLayerUid(layer_name =''):
+def getLayerUid(layerName =''):
     """Helper function, assigns unique layer IDs """
-    if layer_name not in _LAYER_UIDS:
-        _LAYER_UIDS[layer_name] = 1
+    if layerName not in LAYERUIDS:
+        LAYERUIDS[layerName] = 1
         return 1
     else:
-        _LAYER_UIDS[layer_name] += 1
-        return _LAYER_UIDS[layer_name]
+        LAYERUIDS[layerName] += 1
+        return LAYERUIDS[layerName]
 
-def dropoutSparse(x, keep_prob, num_nonzero_elems):
+def dropoutSparse(x, keepProb, numNonzeroElems):
     """Dropout for sparse tensors """
-    noise_shape = [num_nonzero_elems]
-    random_tensor = keep_prob
-    random_tensor += tf.random_uniform(noise_shape)
-    dropout_mask = tf.cast(tf.floor(random_tensor), dtype=tf.bool)
-    pre_out = tf.sparse_retain(x, dropout_mask)
-    return pre_out * (1./keep_prob)
+    noiseShape = [numNonzeroElems]
+    randomTensor = keepProb
+    randomTensor += tf.random_uniform(noiseShape)
+    dropoutMask = tf.cast(tf.floor(randomTensor), dtype=tf.bool)
+    preOut = tf.sparse_retain(x, dropoutMask)
+    return preOut * (1. / keepProb)
 
 class GraphConvolution():
     """ Graph convolution layer """
-    def __init__(self, input_dim, output_dim, adj, dropout = 0., act = tf.nn.relu):
+    def __init__(self, inputDim, outputDim, adj, dropout = 0., act = tf.nn.relu):
         self.layerName = self.__class__.__name__.lower()
         self.name = self.layerName + '_' + str(getLayerUid(self.layerName))
         self.vars = {}
 
         with tf.variable_scope(self.name + '_vars'):
-            self.vars['weights'] = weightVariableGlorot(input_dim, output_dim, name ="weights")
+            self.vars['weights'] = weightVariableGlorot(inputDim, outputDim, name ="weights")
         self.dropout = dropout
         self.adj = adj
         self.act = act
@@ -46,22 +46,22 @@ class GraphConvolution():
 
 class GraphConvolutionSparse():
     """Graph convolution layer for sparse inputs"""
-    def __init__(self, input_dim, output_dim, adj, features_nonzero, dropout = 0., act = tf.nn.relu):
+    def __init__(self, inputDim, outputDim, adj, featuresNonzero, dropout = 0., act = tf.nn.relu):
         self.layerName = self.__class__.__name__.lower()
         self.name = self.layerName + '_' + str(getLayerUid(self.layerName))
         self.vars = {}
 
         with tf.variable_scope(self.name + '_vars'):
-            self.vars['weights'] = weightVariableGlorot(input_dim, output_dim, name ="weights")
+            self.vars['weights'] = weightVariableGlorot(inputDim, outputDim, name ="weights")
         self.dropout = dropout
         self.adj = adj
         self.act = act
         self.issparse = True
-        self.features_nonzero = features_nonzero
+        self.featuresNonzero = featuresNonzero
 
     def __call__(self, inputs):
         x = inputs
-        x = dropoutSparse(x, 1 - self.dropout, self.features_nonzero)
+        x = dropoutSparse(x, 1 - self.dropout, self.featuresNonzero)
         x = tf.sparse_tensor_dense_matmul(x, self.vars['weights'])
         x = tf.sparse_tensor_dense_matmul(self.adj, x)
         outputs = self.act(x)

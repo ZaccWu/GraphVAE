@@ -16,7 +16,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 param = {
     # select the dataset
-    'dataset': 'cora',              # 'cora', 'citeseer', 'pubmed'
+    'dataset': 'citeseer',              # 'cora', 'citeseer', 'pubmed'
     # select the model
     'model': 'gcn_ae',              # 'gcn_ae', 'gcn_vae', 'linear_ae', 'linear_vae', 'deep_gcn_ae', 'deep_gcn_vae'
     # model parameters
@@ -113,7 +113,7 @@ for i in range(param['nb_run']):
                               preds = model.reconstructions,
                               labels = tf.reshape(tf.sparse_tensor_to_dense(placeholders['adj_orig'],
                                                                             validate_indices = False), [-1]),
-                              pos_weight = posWeight,
+                              posWeight= posWeight,
                               norm = norm)
         # Optimizer for Variational Autoencoders
         elif param['model'] in ('gcn_vae', 'linear_vae', 'deep_gcn_vae'):
@@ -122,8 +122,8 @@ for i in range(param['nb_run']):
                                labels = tf.reshape(tf.sparse_tensor_to_dense(placeholders['adj_orig'],
                                                                              validate_indices = False), [-1]),
                                model = model,
-                               num_nodes = numNodes,
-                               pos_weight = posWeight,
+                               numNodes= numNodes,
+                               posWeight= posWeight,
                                norm = norm)
 
     # Normalization and preprocessing on adjacency matrix
@@ -143,7 +143,7 @@ for i in range(param['nb_run']):
         feedDict = constructFeedDict(adjNorm, adjLabel, features, placeholders)
         feedDict.update({placeholders['dropout']: param['dropout']})
         # Weights update
-        outs = sess.run([opt.opt_op, opt.cost, opt.accuracy], feed_dict = feedDict)
+        outs = sess.run([opt.optOp, opt.cost, opt.accuracy], feed_dict = feedDict)
         # Compute average loss
         avgCost = outs[1]
         if param['verbose']:
@@ -152,14 +152,14 @@ for i in range(param['nb_run']):
             # Validation, for Link Prediction
             if not param['kcore'] and param['validation']:
                 feedDict.update({placeholders['dropout']: 0})
-                emb = sess.run(model.z_mean, feed_dict = feedDict)
+                emb = sess.run(model.zMean, feed_dict = feedDict)
                 feedDict.update({placeholders['dropout']: param['dropout']})
                 val_roc, val_ap = getRocScore(valEdges, valEdgesFalse, emb)
                 print("val_roc=", "{:.5f}".format(val_roc), "val_ap=", "{:.5f}".format(val_ap))
 
     # Compute embedding
     # Get embedding from model
-    emb = sess.run(model.z_mean, feed_dict = feedDict)
+    emb = sess.run(model.zMean, feed_dict = feedDict)
 
     # If k-core is used, only part of the nodes from the original graph are embedded.
     # The remaining ones are projected in the latent space via the expand_embedding heuristic
