@@ -31,11 +31,8 @@ class OptimizerVAE(object):
         # Adam Optimizer
         self.optimizer = tf.train.AdamOptimizer(learning_rate = param['learning_rate'])
         # Latent loss
-        self.logLik = self.cost
-        self.kl = (0.5 / numNodes) * tf.reduce_mean(tf.reduce_sum(1 \
-                                               + 2 * model.zLogStd \
-                                               - tf.square(model.zMean) \
-                                               - tf.square(tf.exp(model.zLogStd)), 1))
+        self.logLik = self.cost # What's this for?
+        self.kl = (0.5 / numNodes) * tf.reduce_mean(tf.reduce_sum(1+2*model.zLogStd-tf.square(model.zMean)-tf.square(tf.exp(model.zLogStd)), 1))
         self.cost -= self.kl
         self.optOp = self.optimizer.minimize(self.cost)
         self.gradsVars = self.optimizer.compute_gradients(self.cost)

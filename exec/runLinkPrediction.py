@@ -16,13 +16,13 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 param = {
     # select the dataset
-    'dataset': 'citeseer',              # 'cora', 'citeseer', 'pubmed'
+    'dataset': 'cora',              # 'cora', 'citeseer', 'pubmed'
     # select the model
-    'model': 'gcn_ae',              # 'gcn_ae', 'gcn_vae', 'linear_ae', 'linear_vae', 'deep_gcn_ae', 'deep_gcn_vae'
+    'model': 'gcn_vae',              # 'gcn_ae', 'gcn_vae', 'linear_ae', 'linear_vae', 'deep_gcn_ae', 'deep_gcn_vae'
     # model parameters
     'dropout': 0.,                  # Dropout rate (1 - keep probability)
     'epochs': 200,
-    'features': False,
+    'features': True,
     'learning_rate': 0.01,
     'hidden': 32,                   # Number of units in GCN hidden layer(s)
     'dimension': 16,                # Embedding dimension (Dimension of encoder output)
@@ -33,7 +33,7 @@ param = {
     'validation': False,            # Whether to report validation results at each epoch (link prediction)
     'verbose': True,                # Whether to print comments details
     # degeneracy framework parameters
-    'kcore': True,                 # Whether to run k-core decomposition (False-train on the entire graph)
+    'kcore': False,                 # Whether to run k-core decomposition (False-train on the entire graph)
     'k': 2,
     'nb_iterations': 10,
 }
@@ -48,6 +48,18 @@ if param['verbose']:
     print("Loading data...")
 adjInit, featuresInit = loadData(param['dataset'])
 
+'''
+Data Description
+adjInit <class 'scipy.sparse.csr.csr_matrix'>
+Cora: (2708,2708)
+Citeseer: (3327,3327)
+Pubmed: (19717,19717)
+
+featuresInit <class 'scipy.sparse.lil.lil_matrix'>
+Cora: (2708,1433)
+Citeseer: (3327,3703)
+Pubmed: (19717,500)
+'''
 
 ###### Run the Experiments ######
 # The entire training+test process is repeated nb_run times
@@ -81,7 +93,7 @@ for i in range(param['nb_run']):
     if not param['features']:
         features = sp.identity(adj.shape[0])
     # Preprocessing on node features
-    features = sparseToTuple(features)
+    features = sparseToTuple(features)  # features: tuple
     numFeatures = features[2][1]
     features_nonzero = features[1].shape[0]
 

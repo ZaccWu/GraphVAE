@@ -3,7 +3,7 @@ import scipy.sparse as sp
 import tensorflow as tf
 
 def sparseToTuple(sparseMx):
-    if not sp.isspmatrix_coo(sparseMx):
+    if not sp.isspmatrix_coo(sparseMx): # change all the matrix to coo_matrix
         sparseMx = sparseMx.tocoo()
     coords = np.vstack((sparseMx.row, sparseMx.col)).transpose()
     values = sparseMx.data
@@ -26,8 +26,7 @@ def constructFeedDict(adjNormalized, adj, features, placeholders):
     return feedDict
 
 def maskTestEdges(adj, testPercent=10., valPercent=5.):
-    """ Randomly removes some edges from original graph to create
-    test and validation sets for link prediction task
+    """ Randomly removes some edges from original graph to create test and validation sets for link prediction task
     :param adj: complete sparse adjacency matrix of the graph
     :param testPercent: percentage of edges in test set
     :param valPercent: percentage of edges in validation set
