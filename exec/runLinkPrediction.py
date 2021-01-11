@@ -27,7 +27,7 @@ param = {
     'hidden': 32,                   # Number of units in GCN hidden layer(s)
     'dimension': 16,                # Embedding dimension (Dimension of encoder output)
     # experimental parameters
-    'nb_run':1,                    # Number of model run + test
+    'nb_run':5,                    # Number of model run + test
     'prop_val': 5.,                 # Proportion of edges in validation set (link prediction)
     'prop_test': 10.,               # Proportion of edges in test set (link prediction)
     'validation': False,            # Whether to report validation results at each epoch (link prediction)
