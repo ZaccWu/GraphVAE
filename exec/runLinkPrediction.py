@@ -4,7 +4,7 @@ from util.evaluation import getRocScore, clusteringLatentSpace
 from src.inputData import loadData, loadLabel
 from src.kcore import computeKcore, expandEmbedding
 from src.models import GCNModelAE, GCNModelVAE, LinearModelAE, LinearModelVAE, DeepGCNModelAE, DeepGCNModelVAE
-from src.optimizer import OptimizerAE, OptimizerVAE
+from src.optimizer import OptimizerAE, OptimizerVAE, OptimizerBetaVAE
 from src.preprocessing import *
 import numpy as np
 import os
@@ -18,7 +18,7 @@ param = {
     # select the dataset
     'dataset': 'cora',              # 'cora', 'citeseer', 'pubmed'
     # select the model
-    'model': 'gcn_vae',              # 'gcn_ae', 'gcn_vae', 'linear_ae', 'linear_vae', 'deep_gcn_ae', 'deep_gcn_vae'
+    'model': 'gcn_beta_vae',              # 'gcn_ae', 'gcn_vae', 'linear_ae', 'linear_vae', 'deep_gcn_ae', 'deep_gcn_vae'
     # model parameters
     'dropout': 0.,                  # Dropout rate (1 - keep probability)
     'epochs': 200,
@@ -112,6 +112,7 @@ for i in range(param['nb_run']):
         'linear_vae': LinearModelVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
         'deep_gcn_ae': DeepGCNModelAE(param, placeholders, numFeatures, features_nonzero),
         'deep_gcn_vae': DeepGCNModelVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
+        'gcn_beta_vae': GCNModelVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
     }
     model = ModelDict.get(param['model'])
 
@@ -130,6 +131,15 @@ for i in range(param['nb_run']):
         # Optimizer for Variational Autoencoders
         elif param['model'] in ('gcn_vae', 'linear_vae', 'deep_gcn_vae'):
             opt = OptimizerVAE(params = param,
+                               preds = model.reconstructions,
+                               labels = tf.reshape(tf.sparse_tensor_to_dense(placeholders['adj_orig'],
+                                                                             validate_indices = False), [-1]),
+                               model = model,
+                               numNodes= numNodes,
+                               posWeight= posWeight,
+                               norm = norm)
+        elif param['model'] in ('gcn_beta_vae'):
+            opt = OptimizerBetaVAE(params = param,
                                preds = model.reconstructions,
                                labels = tf.reshape(tf.sparse_tensor_to_dense(placeholders['adj_orig'],
                                                                              validate_indices = False), [-1]),
