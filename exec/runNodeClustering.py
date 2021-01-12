@@ -36,6 +36,8 @@ param = {
     'kcore': False,                 # Whether to run k-core decomposition (False-train on the entire graph)
     'k': 2,
     'nb_iterations': 10,
+    # betaVAE
+    'beta': 0.25,
 }
 
 # Lists to collect average results
