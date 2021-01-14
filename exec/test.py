@@ -1,16 +1,8 @@
-class Atest():
-    def __init__(self, vb):
-        self.va = 1
-        self.vb = vb
+import tensorflow as tf
+a = tf.placeholder(tf.float32, shape=None, name='a')
+b = tf.placeholder(tf.float32, shape=None, name='b')
 
-    def __call__(self):
-        self.vc = self.va + self.vb
+output = tf.add(a,b)
 
-vB = 2
-
-atest = Atest(vB)
-atestcase = atest()
-
-print(atest.va)
-print(atest.vb)
-print(atest.vc)
+with tf.Session() as sess:
+    print(sess.run(output, feed_dict={a:[7,1],b:[2,3]}))

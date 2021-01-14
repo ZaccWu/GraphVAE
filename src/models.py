@@ -41,7 +41,12 @@ class GCNModelVAE():
     def __init__(self, param, placeholders, numFeatures, numNodes, featuresNonzero):
         self.params = param
         self.inputs = placeholders['features']
-        # self.inputs: SparseTensor(indices=Tensor("Placeholder_2:0", shape=(?, ?), dtype=int64), values=Tensor("Placeholder_1:0", shape=(?,), dtype=float32), dense_shape=Tensor("Placeholder:0", shape=(?,), dtype=int64))
+        '''
+        self.inputs: 
+        SparseTensor(indices=Tensor("Placeholder_2:0", shape=(?, ?), dtype=int64), 
+            values=Tensor("Placeholder_1:0", shape=(?,), dtype=float32), 
+            dense_shape=Tensor("Placeholder:0", shape=(?,), dtype=int64))
+        '''
         self.inputDim = numFeatures
         self.featuresNonzero = featuresNonzero
         self.nSamples = numNodes
@@ -54,8 +59,14 @@ class GCNModelVAE():
             # featuresNonzero: 105165
             # nSamples: 3327
         self.adj = placeholders['adj']
+        '''
+        self.adj:
+        SparseTensor(indices=Tensor("Placeholder_5:0", shape=(?, ?), dtype=int64),
+             values=Tensor("Placeholder_4:0", shape=(?,), dtype=float32),
+             dense_shape=Tensor("Placeholder_3:0", shape=(?,), dtype=int64))
+        '''
         self.dropout = placeholders['dropout']
-
+        # self.dropout: Tensor("PlaceholderWithDefault:0", shape=(), dtype=float32)
         self.hidden = GraphConvolutionSparse(inputDim= self.inputDim,
                                              outputDim= self.params['hidden'],
                                              adj = self.adj,
