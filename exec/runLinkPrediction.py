@@ -16,7 +16,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 param = {
     # select the dataset
-    'dataset': 'cora',              # 'cora', 'citeseer', 'pubmed'
+    'dataset': 'citeseer',              # 'cora', 'citeseer', 'pubmed'
     # select the model
     'model': 'gcn_beta_vae',              # 'gcn_ae', 'gcn_vae', 'linear_ae', 'linear_vae', 'deep_gcn_ae', 'deep_gcn_vae'
     # model parameters

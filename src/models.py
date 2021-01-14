@@ -41,9 +41,18 @@ class GCNModelVAE():
     def __init__(self, param, placeholders, numFeatures, numNodes, featuresNonzero):
         self.params = param
         self.inputs = placeholders['features']
+        # self.inputs: SparseTensor(indices=Tensor("Placeholder_2:0", shape=(?, ?), dtype=int64), values=Tensor("Placeholder_1:0", shape=(?,), dtype=float32), dense_shape=Tensor("Placeholder:0", shape=(?,), dtype=int64))
         self.inputDim = numFeatures
         self.featuresNonzero = featuresNonzero
         self.nSamples = numNodes
+        # cora:
+            # inputdim: 1433
+            # featuresNonzero: 49216
+            # nSamples: 2708
+        # citeseer:
+            # inputdim: 3703
+            # featuresNonzero: 105165
+            # nSamples: 3327
         self.adj = placeholders['adj']
         self.dropout = placeholders['dropout']
 
