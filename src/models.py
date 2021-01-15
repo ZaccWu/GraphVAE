@@ -56,7 +56,7 @@ class GCNModelVAE():
             # nSamples: 2708
         # citeseer:
             # inputdim: 3703
-            # featuresNonzero: 105165
+            # featuresNonzero: 105165 (feature=False: 3327)
             # nSamples: 3327
         self.adj = placeholders['adj']
         '''
