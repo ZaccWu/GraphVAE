@@ -1,7 +1,7 @@
 from src.networkUnit import *
 import tensorflow as tf
 
-class GCNModelAE():
+class gcnAE():
     """
     Standard Graph Autoencoder from Kipf and Welling (2016),
     with 2-layer GCN encoder and inner product decoder
@@ -33,7 +33,7 @@ class GCNModelAE():
         pass
 
 
-class GCNModelVAE():
+class gcnVAE():
     """
     Standard Graph Variational Autoencoder from Kipf and Welling (2016),
     with 2-layer GCN encoder, Gaussian distributions and inner product decoder
@@ -92,7 +92,7 @@ class GCNModelVAE():
     def __call__(self):
         pass
 
-class LinearModelAE():
+class linearAE():
     """
     Linear Graph Autoencoder, as defined in Section 3 of NeurIPS 2019 workshop paper,
     with linear encoder and inner product decoder
@@ -117,7 +117,7 @@ class LinearModelAE():
     def __call__(self):
         pass
 
-class LinearModelVAE():
+class linearVAE():
     """
     Linear Graph Variational Autoencoder, as defined in Section 3 of
     NeurIPS 2019 workshop paper, with Gaussian distributions, linear
@@ -154,7 +154,7 @@ class LinearModelVAE():
         pass
 
 
-class DeepGCNModelAE():
+class gcnDeepAE():
     """
     "Deep" Graph Autoencoder from Section 4 of NeurIPS 2019 workshop paper,
     with 3-layer GCN encoder, and inner product decoder
@@ -192,7 +192,7 @@ class DeepGCNModelAE():
         pass
 
 
-class DeepGCNModelVAE():
+class gcnDeepVAE():
     """
     "Deep" Graph Variational Autoencoder, from Section 4 of NeurIPS 2019
     workshop paper, with Gaussian distributions, 3-layer GCN encoders for

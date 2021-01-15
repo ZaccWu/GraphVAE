@@ -3,7 +3,7 @@ from __future__ import print_function
 from util.evaluation import getRocScore, clusteringLatentSpace
 from src.inputData import loadData, loadLabel
 from src.kcore import computeKcore, expandEmbedding
-from src.models import GCNModelAE, GCNModelVAE, LinearModelAE, LinearModelVAE, DeepGCNModelAE, DeepGCNModelVAE
+from src.models import gcnAE, gcnVAE, linearAE, linearVAE, gcnDeepAE, gcnDeepVAE
 from src.optimizer import OptimizerAE, OptimizerVAE
 from src.preprocessing import *
 import numpy as np
@@ -37,7 +37,7 @@ param = {
     'k': 2,
     'nb_iterations': 10,
     # betaVAE
-    'beta': 0.25,
+    'beta': 1,
 }
 
 # Lists to collect average results
@@ -94,13 +94,13 @@ for i in range(param['nb_run']):
     }
 
     ModelDict = {
-        'gcn_ae': GCNModelAE(param, placeholders, numFeatures, features_nonzero),
-        'gcn_vae': GCNModelVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
-        'linear_ae': LinearModelAE(param, placeholders, numFeatures, features_nonzero),
-        'linear_vae': LinearModelVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
-        'deep_gcn_ae': DeepGCNModelAE(param, placeholders, numFeatures, features_nonzero),
-        'deep_gcn_vae': DeepGCNModelVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
-        'gcn_beta_vae': GCNModelVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
+        'gcn_ae': gcnAE(param, placeholders, numFeatures, features_nonzero),
+        'gcn_vae': gcnVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
+        'linear_ae': linearAE(param, placeholders, numFeatures, features_nonzero),
+        'linear_vae': linearVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
+        'deep_gcn_ae': gcnDeepAE(param, placeholders, numFeatures, features_nonzero),
+        'deep_gcn_vae': gcnDeepVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
+        'gcn_beta_vae': gcnVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
     }
     model = ModelDict.get(param['model'])
 
