@@ -87,6 +87,7 @@ class gcnVAE():
                                         dropout = self.dropout)(self.hidden)
 
         self.z = self.zMean + tf.random_normal([self.nSamples, self.params['dimension']]) * tf.exp(self.zLogStd)
+
         self.reconstructions = InnerProductDecoder(act = lambda x: x)(self.z)
 
     def __call__(self):

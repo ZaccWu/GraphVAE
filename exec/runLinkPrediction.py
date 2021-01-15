@@ -37,7 +37,7 @@ param = {
     'k': 2,
     'nb_iterations': 10,
     # betaVAE
-    'beta': 1,
+    'beta': 0.5,
 }
 
 # Lists to collect average results
