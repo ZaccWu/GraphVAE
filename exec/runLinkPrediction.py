@@ -16,7 +16,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 param = {
     # select the dataset
-    'dataset': 'cora',              # 'cora', 'citeseer', 'pubmed'
+    'dataset': 'citeseer',              # 'cora', 'citeseer', 'pubmed'
     # select the model
     'model': 'linear_vae',              # 'gcn_ae', 'gcn_vae', 'linear_ae', 'linear_vae', 'deep_gcn_ae', 'deep_gcn_vae'
     # model parameters
@@ -27,7 +27,7 @@ param = {
     'hidden': 32,                   # Number of units in GCN hidden layer(s)
     'dimension': 16,                # Embedding dimension (Dimension of encoder output)
     # experimental parameters
-    'nb_run':5,                    # Number of model run + test
+    'nb_run':1,                    # Number of model run + test
     'prop_val': 5.,                 # Proportion of edges in validation set (link prediction)
     'prop_test': 10.,               # Proportion of edges in test set (link prediction)
     'validation': False,            # Whether to report validation results at each epoch (link prediction)
@@ -37,7 +37,7 @@ param = {
     'k': 2,
     'nb_iterations': 10,
     # betaVAE
-    'beta': 1,
+    'beta': 5,
 }
 
 # Lists to collect average results
@@ -117,7 +117,6 @@ for i in range(param['nb_run']):
         'gcn_beta_vae': gcnVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
     }
     model = ModelDict.get(param['model'])
-
     # Optimizer
     posWeight = float(adj.shape[0] * adj.shape[0] - adj.sum()) / adj.sum()
     norm = adj.shape[0] * adj.shape[0] / float((adj.shape[0] * adj.shape[0] - adj.sum()) * 2)
@@ -187,6 +186,20 @@ for i in range(param['nb_run']):
     # Compute mean total running time
     meanTime.append(time.time() - tStart)
 
+    '''
+    # print the reconstruction/KL loss and KL for single z_j
+    printll = tf.Print(opt.logLik, [opt.logLik])
+    print(sess.run(printll, feed_dict = feedDict))
+    printkl = tf.Print(opt.kl, [opt.kl])
+    print(sess.run(printkl, feed_dict = feedDict))
+    printz = tf.Print(model.z, [model.z, model.z.shape])
+    allData = sess.run(printz, feed_dict = feedDict)
+    for i in range(16):
+        mu = np.mean(allData[i])
+        sigma = np.std(allData[i])
+        print(-0.5*(1+2*np.log(sigma)-sigma**2-mu**2))    
+    '''
+
     # Test model
     if param['verbose']:
         print("Testing model...")
@@ -206,5 +219,3 @@ print("AP scores\n", meanAP)
 print("Mean AP score: ", np.mean(meanAP), "\nStd of AP scores: ", np.std(meanAP), "\n \n")
 print("Total Running times\n", meanTime)
 print("Mean total running time: ", np.mean(meanTime), "\nStd of total running time: ", np.std(meanTime), "\n \n")
-
-print(model.z)
