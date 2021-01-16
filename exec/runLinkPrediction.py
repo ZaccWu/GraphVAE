@@ -16,9 +16,9 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 param = {
     # select the dataset
-    'dataset': 'citeseer',              # 'cora', 'citeseer', 'pubmed'
+    'dataset': 'cora',              # 'cora', 'citeseer', 'pubmed'
     # select the model
-    'model': 'gcn_vae',              # 'gcn_ae', 'gcn_vae', 'linear_ae', 'linear_vae', 'deep_gcn_ae', 'deep_gcn_vae'
+    'model': 'linear_vae',              # 'gcn_ae', 'gcn_vae', 'linear_ae', 'linear_vae', 'deep_gcn_ae', 'deep_gcn_vae'
     # model parameters
     'dropout': 0.,                  # Dropout rate (1 - keep probability)
     'epochs': 200,
@@ -37,7 +37,7 @@ param = {
     'k': 2,
     'nb_iterations': 10,
     # betaVAE
-    'beta': 0.5,
+    'beta': 1,
 }
 
 # Lists to collect average results
@@ -206,3 +206,5 @@ print("AP scores\n", meanAP)
 print("Mean AP score: ", np.mean(meanAP), "\nStd of AP scores: ", np.std(meanAP), "\n \n")
 print("Total Running times\n", meanTime)
 print("Mean total running time: ", np.mean(meanTime), "\nStd of total running time: ", np.std(meanTime), "\n \n")
+
+print(model.z)
