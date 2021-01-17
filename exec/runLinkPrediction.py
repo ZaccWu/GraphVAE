@@ -3,7 +3,7 @@ from __future__ import print_function
 from util.evaluation import getRocScore, clusteringLatentSpace
 from src.inputData import loadData, loadLabel
 from src.kcore import computeKcore, expandEmbedding
-from src.models import gcnAE, gcnVAE, linearAE, linearVAE, gcnDeepAE, gcnDeepVAE
+from src.models import gcnAE, gcnVAE, linearAE, linearVAE, gcnDeepAE, gcnDeepVAE, gcnMeanVAE, gcnStdVAE
 from src.optimizer import OptimizerAE, OptimizerVAE
 from src.preprocessing import *
 import numpy as np
@@ -16,9 +16,9 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 param = {
     # select the dataset
-    'dataset': 'citeseer',              # 'cora', 'citeseer', 'pubmed'
+    'dataset': 'cora',              # 'cora', 'citeseer', 'pubmed'
     # select the model
-    'model': 'linear_vae',              # 'gcn_ae', 'gcn_vae', 'linear_ae', 'linear_vae', 'deep_gcn_ae', 'deep_gcn_vae'
+    'model': 'gcn_vae',              # 'gcn_ae', 'gcn_vae', 'linear_ae', 'linear_vae', 'deep_gcn_ae', 'deep_gcn_vae', 'gcn_mean_vae', 'gcn_std_vae'
     # model parameters
     'dropout': 0.,                  # Dropout rate (1 - keep probability)
     'epochs': 200,
@@ -27,7 +27,7 @@ param = {
     'hidden': 32,                   # Number of units in GCN hidden layer(s)
     'dimension': 16,                # Embedding dimension (Dimension of encoder output)
     # experimental parameters
-    'nb_run':1,                    # Number of model run + test
+    'nb_run':5,                    # Number of model run + test
     'prop_val': 5.,                 # Proportion of edges in validation set (link prediction)
     'prop_test': 10.,               # Proportion of edges in test set (link prediction)
     'validation': False,            # Whether to report validation results at each epoch (link prediction)
@@ -37,7 +37,7 @@ param = {
     'k': 2,
     'nb_iterations': 10,
     # betaVAE
-    'beta': 5,
+    'beta': 1,
 }
 
 # Lists to collect average results
@@ -114,7 +114,8 @@ for i in range(param['nb_run']):
         'linear_vae': linearVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
         'deep_gcn_ae': gcnDeepAE(param, placeholders, numFeatures, features_nonzero),
         'deep_gcn_vae': gcnDeepVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
-        'gcn_beta_vae': gcnVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
+        'gcn_mean_vae': gcnMeanVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
+        'gcn_std_vae': gcnStdVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
     }
     model = ModelDict.get(param['model'])
     # Optimizer
@@ -130,7 +131,7 @@ for i in range(param['nb_run']):
                               posWeight= posWeight,
                               norm = norm)
         # Optimizer for Variational Autoencoders
-        elif param['model'] in ('gcn_vae', 'linear_vae', 'deep_gcn_vae'):
+        elif param['model'] in ('gcn_vae', 'linear_vae', 'deep_gcn_vae', 'gcn_mean_vae', 'gcn_std_vae'):
             opt = OptimizerVAE(params = param,
                                preds = model.reconstructions,
                                labels = tf.reshape(tf.sparse_tensor_to_dense(placeholders['adj_orig'],

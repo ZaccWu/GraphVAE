@@ -74,17 +74,21 @@ class gcnVAE():
                                              act = tf.nn.relu,
                                              dropout = self.dropout)(self.inputs)
 
+        # GCN mean
         self.zMean = GraphConvolution(inputDim= self.params['hidden'],
                                       outputDim= self.params['dimension'],
                                       adj = self.adj,
                                       act = lambda x: x,
                                       dropout = self.dropout)(self.hidden)
 
+
+        # GCN std
         self.zLogStd = GraphConvolution(inputDim= self.params['hidden'],
                                         outputDim= self.params['dimension'],
                                         adj = self.adj,
                                         act = lambda x: x,
                                         dropout = self.dropout)(self.hidden)
+
 
         self.z = self.zMean + tf.random_normal([self.nSamples, self.params['dimension']]) * tf.exp(self.zLogStd)
 
@@ -146,6 +150,7 @@ class linearVAE():
                                               featuresNonzero= self.featuresNonzero,
                                               act = lambda x: x,
                                               dropout = self.dropout)(self.inputs)
+
         self.z = self.zMean + tf.random_normal([self.nSamples, self.params['dimension']]) * tf.exp(self.zLogStd)
         self.reconstructions = InnerProductDecoder(act = lambda x: x)(self.z)
 
@@ -230,6 +235,86 @@ class gcnDeepVAE():
                                         adj = self.adj,
                                         act = lambda x: x,
                                         dropout = self.dropout)(self.hidden2)
+
+        self.z = self.zMean + tf.random_normal([self.nSamples, self.params['dimension']]) * tf.exp(self.zLogStd)
+
+        self.reconstructions = InnerProductDecoder(act = lambda x: x)(self.z)
+
+    def __call__(self):
+        pass
+
+
+class gcnMeanVAE():
+    """
+    mean got from GCN and std got from Linear
+    """
+    def __init__(self, param, placeholders, numFeatures, numNodes, featuresNonzero):
+        self.params = param
+        self.inputs = placeholders['features']
+        self.inputDim = numFeatures
+        self.featuresNonzero = featuresNonzero
+        self.nSamples = numNodes
+        self.adj = placeholders['adj']
+        self.dropout = placeholders['dropout']
+        self.hidden = GraphConvolutionSparse(inputDim= self.inputDim,
+                                             outputDim= self.params['hidden'],
+                                             adj = self.adj,
+                                             featuresNonzero= self.featuresNonzero,
+                                             act = tf.nn.relu,
+                                             dropout = self.dropout)(self.inputs)
+        # GCN mean
+        self.zMean = GraphConvolution(inputDim= self.params['hidden'],
+                                      outputDim= self.params['dimension'],
+                                      adj = self.adj,
+                                      act = lambda x: x,
+                                      dropout = self.dropout)(self.hidden)
+        # linear std
+        self.zLogStd = GraphConvolutionSparse(inputDim= self.inputDim,
+                                             outputDim= self.params['dimension'],
+                                             adj = self.adj,
+                                             featuresNonzero= self.featuresNonzero,
+                                             act = lambda x: x,
+                                             dropout = self.dropout)(self.inputs)
+
+        self.z = self.zMean + tf.random_normal([self.nSamples, self.params['dimension']]) * tf.exp(self.zLogStd)
+
+        self.reconstructions = InnerProductDecoder(act = lambda x: x)(self.z)
+
+    def __call__(self):
+        pass
+
+
+class gcnStdVAE():
+    """
+    mean got from Linear and std got from GCN
+    """
+    def __init__(self, param, placeholders, numFeatures, numNodes, featuresNonzero):
+        self.params = param
+        self.inputs = placeholders['features']
+        self.inputDim = numFeatures
+        self.featuresNonzero = featuresNonzero
+        self.nSamples = numNodes
+        self.adj = placeholders['adj']
+        self.dropout = placeholders['dropout']
+        self.hidden = GraphConvolutionSparse(inputDim= self.inputDim,
+                                             outputDim= self.params['hidden'],
+                                             adj = self.adj,
+                                             featuresNonzero= self.featuresNonzero,
+                                             act = tf.nn.relu,
+                                             dropout = self.dropout)(self.inputs)
+        # linear mean
+        self.zMean = GraphConvolutionSparse(inputDim= self.inputDim,
+                                             outputDim= self.params['dimension'],
+                                             adj = self.adj,
+                                             featuresNonzero= self.featuresNonzero,
+                                             act = lambda x: x,
+                                             dropout = self.dropout)(self.inputs)
+        # GCN std
+        self.zLogStd = GraphConvolution(inputDim= self.params['hidden'],
+                                        outputDim= self.params['dimension'],
+                                        adj = self.adj,
+                                        act = lambda x: x,
+                                        dropout = self.dropout)(self.hidden)
 
         self.z = self.zMean + tf.random_normal([self.nSamples, self.params['dimension']]) * tf.exp(self.zLogStd)
 

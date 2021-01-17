@@ -33,7 +33,7 @@ class OptimizerVAE(object):
         # Latent loss
         self.logLik = self.cost
         self.kl = (0.5 / numNodes) * tf.reduce_mean(tf.reduce_sum(1+2*model.zLogStd-tf.square(model.zMean)-tf.square(tf.exp(model.zLogStd)), 1))
-        self.cost -= param['beta'] * self.kl
+        self.cost -= params['beta'] * self.kl  # change here
         self.optOp = self.optimizer.minimize(self.cost)
         self.gradsVars = self.optimizer.compute_gradients(self.cost)
         self.correctPrediction = tf.equal(tf.cast(tf.greater_equal(tf.sigmoid(predsSub), 0.5), tf.int32),
