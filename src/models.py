@@ -1,6 +1,38 @@
 from src.networkUnit import *
 import tensorflow as tf
 
+'''
+Model Notice
+
+Variables
+    self.inputs: 
+    SparseTensor(indices=Tensor("Placeholder_2:0", shape=(?, ?), dtype=int64), 
+        values=Tensor("Placeholder_1:0", shape=(?,), dtype=float32), 
+        dense_shape=Tensor("Placeholder:0", shape=(?,), dtype=int64))
+        
+    self.adj:
+    SparseTensor(indices=Tensor("Placeholder_5:0", shape=(?, ?), dtype=int64),
+         values=Tensor("Placeholder_4:0", shape=(?,), dtype=float32),
+         dense_shape=Tensor("Placeholder_3:0", shape=(?,), dtype=int64))
+    self.dropout: Tensor("PlaceholderWithDefault:0", shape=(), dtype=float32)
+
+Data
+    cora:
+        inputdim: 1433
+        featuresNonzero: 49216
+        nSamples: 2708
+    citeseer:
+        inputdim: 3703
+        featuresNonzero: 105165 (feature=False: 3327)
+        nSamples: 3327
+        
+Method
+    how to concat:
+        self.z1 = self.zMean[:,:8] + tf.random_normal([self.nSamples, 8]) * tf.exp(self.zLogStd[:,:8])
+        self.z2 = self.zMean[:,:-8] + tf.random_normal([self.nSamples, 8]) * tf.exp(self.zLogStd[:,:-8])
+        self.z = tf.concat([self.z1, self.z2],1)
+'''
+
 class gcnAE():
     """
     Standard Graph Autoencoder from Kipf and Welling (2016),
@@ -41,32 +73,12 @@ class gcnVAE():
     def __init__(self, param, placeholders, numFeatures, numNodes, featuresNonzero):
         self.params = param
         self.inputs = placeholders['features']
-        '''
-        self.inputs: 
-        SparseTensor(indices=Tensor("Placeholder_2:0", shape=(?, ?), dtype=int64), 
-            values=Tensor("Placeholder_1:0", shape=(?,), dtype=float32), 
-            dense_shape=Tensor("Placeholder:0", shape=(?,), dtype=int64))
-        '''
         self.inputDim = numFeatures
         self.featuresNonzero = featuresNonzero
         self.nSamples = numNodes
-        # cora:
-            # inputdim: 1433
-            # featuresNonzero: 49216
-            # nSamples: 2708
-        # citeseer:
-            # inputdim: 3703
-            # featuresNonzero: 105165 (feature=False: 3327)
-            # nSamples: 3327
+
         self.adj = placeholders['adj']
-        '''
-        self.adj:
-        SparseTensor(indices=Tensor("Placeholder_5:0", shape=(?, ?), dtype=int64),
-             values=Tensor("Placeholder_4:0", shape=(?,), dtype=float32),
-             dense_shape=Tensor("Placeholder_3:0", shape=(?,), dtype=int64))
-        '''
         self.dropout = placeholders['dropout']
-        # self.dropout: Tensor("PlaceholderWithDefault:0", shape=(), dtype=float32)
         self.hidden = GraphConvolutionSparse(inputDim= self.inputDim,
                                              outputDim= self.params['hidden'],
                                              adj = self.adj,
@@ -88,7 +100,6 @@ class gcnVAE():
                                         adj = self.adj,
                                         act = lambda x: x,
                                         dropout = self.dropout)(self.hidden)
-
 
         self.z = self.zMean + tf.random_normal([self.nSamples, self.params['dimension']]) * tf.exp(self.zLogStd)
 
