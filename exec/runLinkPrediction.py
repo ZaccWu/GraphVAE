@@ -19,14 +19,14 @@ param = {
     # select the dataset
     'dataset': 'cora',              # 'cora', 'citeseer', 'pubmed'
     # select the model
-    'model': 'gcn_stdprior_vae',              # 'gcn_ae', 'gcn_vae', 'linear_ae', 'linear_vae', 'deep_gcn_ae', 'deep_gcn_vae', 'gcn_mean_vae', 'gcn_std_vae'
+    'model': 'gcn_stdprior_vae',              # 'gcn_ae', 'gcn_vae', 'linear_ae', 'linear_vae', 'deep_gcn_ae', 'deep_gcn_vae', 'gcn_mean_vae', 'gcn_std_vae', 'gcn_stdprior_vae'
     # model parameters
     'dropout': 0.,                  # Dropout rate (1 - keep probability)
     'epochs': 200,
     'features': True,
     'learning_rate': 0.01,
     'hidden': 32,                   # Number of units in GCN hidden layer(s)
-    'dimension': 32,                # Embedding dimension (Dimension of encoder output)
+    'dimension': 16,                # Embedding dimension (Dimension of encoder output)
     # experimental parameters
     'nb_run': 5,                    # Number of model run + test
     'prop_val': 5.,                 # Proportion of edges in validation set (link prediction)
@@ -105,7 +105,7 @@ for i in range(param['nb_run']):
         'features': tf.sparse_placeholder(tf.float32),
         'adj': tf.sparse_placeholder(tf.float32),
         'adj_orig': tf.sparse_placeholder(tf.float32),
-        'dropout': tf.placeholder_with_default(0., shape = ())
+        'dropout': tf.placeholder_with_default(0., shape = ()),
     }
 
     ModelDict = {
@@ -123,6 +123,7 @@ for i in range(param['nb_run']):
     # Optimizer
     posWeight = float(adj.shape[0] * adj.shape[0] - adj.sum()) / adj.sum()
     norm = adj.shape[0] * adj.shape[0] / float((adj.shape[0] * adj.shape[0] - adj.sum()) * 2)
+
     with tf.name_scope('optimizer'):
         # Optimizer for Non-Variational Autoencoders
         if param['model'] in ('gcn_ae', 'linear_ae', 'deep_gcn_ae'):
@@ -161,6 +162,7 @@ for i in range(param['nb_run']):
         feedDict.update({placeholders['dropout']: param['dropout']})
         # Weights update
         outs = sess.run([opt.optOp, opt.cost, opt.accuracy], feed_dict = feedDict)
+
         # Compute average loss
         avgCost = outs[1]
         if param['verbose']:
@@ -192,15 +194,17 @@ for i in range(param['nb_run']):
     '''
     # print the reconstruction/KL loss and KL for single z_j
     printll = tf.Print(opt.logLik, [opt.logLik])
-    print(sess.run(printll, feed_dict = feedDict))
-    printkl = tf.Print(opt.kl, [opt.kl])
-    print(sess.run(printkl, feed_dict = feedDict))
+    # print(sess.run(printll, feed_dict=feedDict))
+    printkl = tf.Print(opt.negkl, [opt.negkl])
+    # print(sess.run(printkl, feed_dict=feedDict))
     printz = tf.Print(model.z, [model.z, model.z.shape])
-    allData = sess.run(printz, feed_dict = feedDict)
+    allData = sess.run(printz, feed_dict=feedDict)
     for i in range(16):
+        # print(type(allData[i])) # <class 'numpy.ndarray'>
+        # print(allData[i].shape) # (16,)
         mu = np.mean(allData[i])
         sigma = np.std(allData[i])
-        print(-0.5*(1+2*np.log(sigma)-sigma**2-mu**2))    
+        print(-0.5 * (1 + 2 * np.log(sigma) - sigma ** 2 - mu ** 2))
     '''
 
     # Test model

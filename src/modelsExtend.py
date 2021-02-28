@@ -15,6 +15,7 @@ class gcnStdPriorVAE():
 
         self.adj = placeholders['adj']
         self.dropout = placeholders['dropout']
+
         self.hidden = GraphConvolutionSparse(inputDim= self.inputDim,
                                              outputDim= self.params['hidden'],
                                              adj = self.adj,
@@ -38,8 +39,8 @@ class gcnStdPriorVAE():
                                         adj = self.adj,
                                         act = lambda x: x,
                                         dropout = self.dropout)(self.hidden)
-        self.zLogStd = self.zMeanPrior + tf.random_normal([self.nSamples, self.params['dimension']]) * tf.exp(self.zStdPrior)
 
+        self.zLogStd = self.zMeanPrior + tf.random_normal([self.nSamples, self.params['dimension']]) * tf.exp(self.zStdPrior)
         self.z = self.zMean + tf.random_normal([self.nSamples, self.params['dimension']]) * tf.exp(self.zLogStd)
         self.reconstructions = InnerProductDecoder(act = lambda x: x)(self.z)
 

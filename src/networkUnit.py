@@ -81,3 +81,7 @@ class InnerProductDecoder():
         x = tf.reshape(x, [-1])
         outputs = self.act(x)
         return outputs
+
+
+
+
