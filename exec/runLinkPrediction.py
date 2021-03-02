@@ -17,18 +17,18 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 param = {
     # select the dataset
-    'dataset': 'citeseer',              # 'cora', 'citeseer', 'pubmed'
+    'dataset': 'cora',              # 'cora', 'citeseer', 'pubmed'
     # select the model
     'model': 'gcn_std_hvae',              # 'gcn_ae', 'gcn_vae', 'linear_ae', 'linear_vae', 'deep_gcn_ae', 'deep_gcn_vae', 'gcn_mean_vae', 'gcn_std_vae', 'gcn_std_hvae'
     # model parameters
     'dropout': 0.,                  # Dropout rate (1 - keep probability)
-    'epochs': 100,
+    'epochs': 200,
     'features': True,
     'learning_rate': 0.01,
     'hidden': 32,                   # Number of units in GCN hidden layer(s)
     'dimension': 16,                # Embedding dimension (Dimension of encoder output)
     # experimental parameters
-    'nb_run': 1,                    # Number of model run + test
+    'nb_run': 5,                    # Number of model run + test
     'prop_val': 5.,                 # Proportion of edges in validation set (link prediction)
     'prop_test': 10.,               # Proportion of edges in test set (link prediction)
     'validation': False,            # Whether to report validation results at each epoch (link prediction)
@@ -39,7 +39,7 @@ param = {
     'nb_iterations': 10,
     # betaVAE
     'beta': 1,
-    'gamma': 0,
+    'gamma': 1,
 }
 
 # Lists to collect average results

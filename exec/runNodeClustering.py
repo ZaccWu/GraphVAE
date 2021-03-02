@@ -17,7 +17,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 param = {
     # select the dataset
-    'dataset': 'cora',              # 'cora', 'citeseer', 'pubmed'
+    'dataset': 'citeseer',              # 'cora', 'citeseer', 'pubmed'
     # select the model
     'model': 'gcn_std_hvae',              # 'gcn_ae', 'gcn_vae', 'linear_ae', 'linear_vae', 'deep_gcn_ae', 'deep_gcn_vae', 'gcn_mean_vae', 'gcn_std_vae', 'gcn_std_hvae'
     # model parameters
@@ -32,7 +32,7 @@ param = {
     'prop_val': 5.,                 # Proportion of edges in validation set (link prediction)
     'prop_test': 10.,               # Proportion of edges in test set (link prediction)
     'validation': False,            # Whether to report validation results at each epoch (link prediction)
-    'verbose': False,                # Whether to print comments details
+    'verbose': True,                # Whether to print comments details
     # degeneracy framework parameters
     'kcore': False,                 # Whether to run k-core decomposition (False-train on the entire graph)
     'k': 2,
