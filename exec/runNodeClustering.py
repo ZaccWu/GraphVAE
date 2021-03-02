@@ -4,8 +4,8 @@ from util.evaluation import getRocScore, clusteringLatentSpace
 from src.inputData import loadData, loadLabel
 from src.kcore import computeKcore, expandEmbedding
 from src.models import gcnAE, gcnVAE, linearAE, linearVAE, gcnDeepAE, gcnDeepVAE, gcnMeanVAE, gcnStdVAE
-from src.modelsExtend import gcnStdPriorVAE
-from src.optimizer import OptimizerAE, OptimizerVAE
+from src.modelsExtend import gcnStdHVAE
+from src.optimizer import OptimizerAE, OptimizerVAE, OptimizerHVAE
 from src.preprocessing import *
 import numpy as np
 import os
@@ -19,7 +19,7 @@ param = {
     # select the dataset
     'dataset': 'citeseer',              # 'cora', 'citeseer', 'pubmed'
     # select the model
-    'model': 'gcn_stdprior_vae',              # 'gcn_ae', 'gcn_vae', 'linear_ae', 'linear_vae', 'deep_gcn_ae', 'deep_gcn_vae', 'gcn_mean_vae', 'gcn_std_vae'
+    'model': 'gcn_std_hvae',              # 'gcn_ae', 'gcn_vae', 'linear_ae', 'linear_vae', 'deep_gcn_ae', 'deep_gcn_vae', 'gcn_mean_vae', 'gcn_std_vae', 'gcn_std_hvae'
     # model parameters
     'dropout': 0.,                  # Dropout rate (1 - keep probability)
     'epochs': 200,
@@ -103,7 +103,7 @@ for i in range(param['nb_run']):
         'deep_gcn_vae': gcnDeepVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
         'gcn_mean_vae': gcnMeanVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
         'gcn_std_vae': gcnStdVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
-        'gcn_stdprior_vae': gcnStdPriorVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
+        'gcn_std_hvae': gcnStdHVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
     }
     model = ModelDict.get(param['model'])
 
@@ -120,8 +120,17 @@ for i in range(param['nb_run']):
                               posWeight= posWeight,
                               norm = norm)
         # Optimizer for Variational Autoencoders
-        elif param['model'] in ('gcn_vae', 'linear_vae', 'deep_gcn_vae', 'gcn_mean_vae', 'gcn_std_vae','gcn_stdprior_vae'):
+        elif param['model'] in ('gcn_vae', 'linear_vae', 'deep_gcn_vae', 'gcn_mean_vae', 'gcn_std_vae'):
             opt = OptimizerVAE(params = param,
+                               preds = model.reconstructions,
+                               labels = tf.reshape(tf.sparse_tensor_to_dense(placeholders['adj_orig'],
+                                                                             validate_indices = False), [-1]),
+                               model = model,
+                               numNodes= numNodes,
+                               posWeight= posWeight,
+                               norm = norm)
+        elif param['model'] in ('gcn_std_hvae'):
+            opt = OptimizerHVAE(params = param,
                                preds = model.reconstructions,
                                labels = tf.reshape(tf.sparse_tensor_to_dense(placeholders['adj_orig'],
                                                                              validate_indices = False), [-1]),

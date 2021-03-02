@@ -1,13 +1,14 @@
 import tensorflow as tf
+import random
 
 class HSIC():
     def __init__(self, zdim):
         self.zdim = zdim
 
     def __call__(self, z):
-
         #hsicList = [self.calHSIC(z,i,j) for i in range(self.zdim) for j in range(i)]
-        hsicList = [self.calHSIC(z, 1, 1)]
+        i,j = random.sample(range(0,self.zdim),2)
+        hsicList = [self.calHSIC(z, i, j)]
         self.hsic = tf.convert_to_tensor(hsicList)
         return self.hsic
 

@@ -1,7 +1,8 @@
 from src.networkUnit import *
 import tensorflow as tf
+from util.metrics import *
 
-class gcnStdPriorVAE():
+class gcnStdHVAE():
     """
     Standard Graph Variational Autoencoder from Kipf and Welling (2016),
     with 2-layer GCN encoder, Gaussian distributions and inner product decoder
@@ -29,20 +30,16 @@ class gcnStdPriorVAE():
                                              featuresNonzero= self.featuresNonzero,
                                              act = lambda x: x,
                                              dropout = self.dropout)(self.inputs)
-        self.zMeanPrior = GraphConvolution(inputDim= self.params['hidden'],
-                                        outputDim= self.params['dimension'],
-                                        adj = self.adj,
-                                        act = lambda x: x,
-                                        dropout = self.dropout)(self.hidden)
-        self.zStdPrior = GraphConvolution(inputDim= self.params['hidden'],
+        self.zLogStd = GraphConvolution(inputDim= self.params['hidden'],
                                         outputDim= self.params['dimension'],
                                         adj = self.adj,
                                         act = lambda x: x,
                                         dropout = self.dropout)(self.hidden)
 
-        self.zLogStd = self.zMeanPrior + tf.random_normal([self.nSamples, self.params['dimension']]) * tf.exp(self.zStdPrior)
         self.z = self.zMean + tf.random_normal([self.nSamples, self.params['dimension']]) * tf.exp(self.zLogStd)
         self.reconstructions = InnerProductDecoder(act = lambda x: x)(self.z)
+
+        self.hsic = tf.reduce_sum(HSIC(self.params['dimension'])(self.z))
 
     def __call__(self):
         pass

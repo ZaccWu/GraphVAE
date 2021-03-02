@@ -4,8 +4,8 @@ from util.evaluation import getRocScore, clusteringLatentSpace
 from src.inputData import loadData, loadLabel
 from src.kcore import computeKcore, expandEmbedding
 from src.models import gcnAE, gcnVAE, linearAE, linearVAE, gcnDeepAE, gcnDeepVAE, gcnMeanVAE, gcnStdVAE
-from src.modelsExtend import gcnStdPriorVAE
-from src.optimizer import OptimizerAE, OptimizerVAE
+from src.modelsExtend import gcnStdHVAE
+from src.optimizer import OptimizerAE, OptimizerVAE, OptimizerHVAE
 from src.preprocessing import *
 import numpy as np
 import os
@@ -19,16 +19,16 @@ param = {
     # select the dataset
     'dataset': 'cora',              # 'cora', 'citeseer', 'pubmed'
     # select the model
-    'model': 'gcn_stdprior_vae',              # 'gcn_ae', 'gcn_vae', 'linear_ae', 'linear_vae', 'deep_gcn_ae', 'deep_gcn_vae', 'gcn_mean_vae', 'gcn_std_vae', 'gcn_stdprior_vae'
+    'model': 'gcn_std_hvae',              # 'gcn_ae', 'gcn_vae', 'linear_ae', 'linear_vae', 'deep_gcn_ae', 'deep_gcn_vae', 'gcn_mean_vae', 'gcn_std_vae', 'gcn_std_hvae
     # model parameters
     'dropout': 0.,                  # Dropout rate (1 - keep probability)
-    'epochs': 200,
+    'epochs': 100,
     'features': True,
     'learning_rate': 0.01,
     'hidden': 32,                   # Number of units in GCN hidden layer(s)
     'dimension': 16,                # Embedding dimension (Dimension of encoder output)
     # experimental parameters
-    'nb_run': 5,                    # Number of model run + test
+    'nb_run': 1,                    # Number of model run + test
     'prop_val': 5.,                 # Proportion of edges in validation set (link prediction)
     'prop_test': 10.,               # Proportion of edges in test set (link prediction)
     'validation': False,            # Whether to report validation results at each epoch (link prediction)
@@ -39,6 +39,7 @@ param = {
     'nb_iterations': 10,
     # betaVAE
     'beta': 1,
+    'gamma': 1,
 }
 
 # Lists to collect average results
@@ -117,7 +118,7 @@ for i in range(param['nb_run']):
         'deep_gcn_vae': gcnDeepVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
         'gcn_mean_vae': gcnMeanVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
         'gcn_std_vae': gcnStdVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
-        'gcn_stdprior_vae': gcnStdPriorVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
+        'gcn_std_hvae': gcnStdHVAE(param, placeholders, numFeatures, numNodes, features_nonzero),
     }
     model = ModelDict.get(param['model'])
     # Optimizer
@@ -134,8 +135,17 @@ for i in range(param['nb_run']):
                               posWeight= posWeight,
                               norm = norm)
         # Optimizer for Variational Autoencoders
-        elif param['model'] in ('gcn_vae', 'linear_vae', 'deep_gcn_vae', 'gcn_mean_vae', 'gcn_std_vae', 'gcn_stdprior_vae'):
+        elif param['model'] in ('gcn_vae', 'linear_vae', 'deep_gcn_vae', 'gcn_mean_vae', 'gcn_std_vae'):
             opt = OptimizerVAE(params = param,
+                               preds = model.reconstructions,
+                               labels = tf.reshape(tf.sparse_tensor_to_dense(placeholders['adj_orig'],
+                                                                             validate_indices = False), [-1]),
+                               model = model,
+                               numNodes= numNodes,
+                               posWeight= posWeight,
+                               norm = norm)
+        elif param['model'] in ('gcn_std_hvae'):
+            opt = OptimizerHVAE(params = param,
                                preds = model.reconstructions,
                                labels = tf.reshape(tf.sparse_tensor_to_dense(placeholders['adj_orig'],
                                                                              validate_indices = False), [-1]),
@@ -191,12 +201,15 @@ for i in range(param['nb_run']):
     # Compute mean total running time
     meanTime.append(time.time() - tStart)
 
-    '''
+
     # print the reconstruction/KL loss and KL for single z_j
     printll = tf.Print(opt.logLik, [opt.logLik])
-    # print(sess.run(printll, feed_dict=feedDict))
+    print(sess.run(printll, feed_dict=feedDict))
     printkl = tf.Print(opt.negkl, [opt.negkl])
-    # print(sess.run(printkl, feed_dict=feedDict))
+    print(sess.run(printkl, feed_dict=feedDict))
+    printhsic = tf.Print(opt.hsic, [opt.hsic])
+    print(sess.run(printhsic, feed_dict=feedDict))
+    '''
     printz = tf.Print(model.z, [model.z, model.z.shape])
     allData = sess.run(printz, feed_dict=feedDict)
     for i in range(16):
