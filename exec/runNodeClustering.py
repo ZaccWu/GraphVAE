@@ -18,7 +18,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 param = {
     # select the dataset
-    'dataset': 'citeseer',              # 'cora', 'citeseer', 'pubmed'
+    'dataset': 'cora',              # 'cora', 'citeseer', 'pubmed'
     # select the model
     'model': 'gcn_std_hvae',              # 'gcn_ae', 'gcn_vae', 'linear_ae', 'linear_vae', 'deep_gcn_ae', 'deep_gcn_vae', 'gcn_mean_vae', 'gcn_std_vae', 'gcn_std_hvae'
     # model parameters
@@ -33,13 +33,14 @@ param = {
     'prop_val': 5.,                 # Proportion of edges in validation set (link prediction)
     'prop_test': 10.,               # Proportion of edges in test set (link prediction)
     'validation': False,            # Whether to report validation results at each epoch (link prediction)
-    'verbose': True,                # Whether to print comments details
+    'verbose': False,                # Whether to print comments details
     # degeneracy framework parameters
     'kcore': False,                 # Whether to run k-core decomposition (False-train on the entire graph)
     'k': 2,
     'nb_iterations': 10,
     # betaVAE
     'beta': 1,
+    'gamma': 1,
 }
 
 # Lists to collect average results
@@ -158,12 +159,14 @@ for i in range(param['nb_run']):
         feedDict.update({placeholders['dropout']: param['dropout']})
 
         # Weights update
-        outs = sess.run([opt.optOp, opt.cost, opt.accuracy], feed_dict = feedDict)
-        # Compute average loss
+        outs = sess.run([opt.optOp, opt.cost, opt.accuracy, opt.logLik, opt.negkl, opt.hsic], feed_dict = feedDict)
+       # Compute average loss
         avgCost = outs[1]
         if param['verbose']:
             # Display epoch information
-            print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(avgCost))
+            # print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(avgCost))
+            print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.3f}".format(outs[1]),"loglik=", "{:.3f}".format(outs[3]),"negkl=", "{:.3f}".format(outs[4]),"hsic=", "{:.3f}".format(outs[5]))
+
 
     # Compute embedding
     # Get embedding from model

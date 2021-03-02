@@ -18,12 +18,12 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 param = {
     # select the dataset
-    'dataset': 'cora',              # 'cora', 'citeseer', 'pubmed'
+    'dataset': 'citeseer',              # 'cora', 'citeseer', 'pubmed'
     # select the model
-    'model': 'gcn_std_hvae',              # 'gcn_ae', 'gcn_vae', 'linear_ae', 'linear_vae', 'deep_gcn_ae', 'deep_gcn_vae', 'gcn_mean_vae', 'gcn_std_vae', 'gcn_std_hvae
+    'model': 'gcn_std_hvae',              # 'gcn_ae', 'gcn_vae', 'linear_ae', 'linear_vae', 'deep_gcn_ae', 'deep_gcn_vae', 'gcn_mean_vae', 'gcn_std_vae', 'gcn_std_hvae'
     # model parameters
     'dropout': 0.,                  # Dropout rate (1 - keep probability)
-    'epochs': 200,
+    'epochs': 100,
     'features': True,
     'learning_rate': 0.01,
     'hidden': 32,                   # Number of units in GCN hidden layer(s)
@@ -40,7 +40,7 @@ param = {
     'nb_iterations': 10,
     # betaVAE
     'beta': 1,
-    'gamma': 1,
+    'gamma': 0,
 }
 
 # Lists to collect average results

@@ -7,7 +7,8 @@ class HSIC():
 
     def __call__(self, z):
         #hsicList = [self.calHSIC(z,i,j) for i in range(self.zdim) for j in range(i)]
-        hsicList = [self.calHSIC(z,0,1)]
+        hsicList = [self.calHSIC(z,0,1),self.calHSIC(z,0,2),self.calHSIC(z,0,3),self.calHSIC(z,1,2),
+                    self.calHSIC(z,1,3),self.calHSIC(z,2,3)]
         self.hsic = tf.convert_to_tensor(hsicList)
         return self.hsic
 
