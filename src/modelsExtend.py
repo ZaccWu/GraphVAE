@@ -1,6 +1,5 @@
 from src.networkUnit import *
 import tensorflow as tf
-from util.metrics import *
 
 class gcnStdHVAE():
     """
@@ -39,7 +38,7 @@ class gcnStdHVAE():
         self.z = self.zMean + tf.random_normal([self.nSamples, self.params['dimension']]) * tf.exp(self.zLogStd)
         self.reconstructions = InnerProductDecoder(act = lambda x: x)(self.z)
 
-        self.hsic = tf.reduce_sum(HSIC(self.params['dimension'])(self.z))
+
 
     def __call__(self):
         pass

@@ -12,6 +12,7 @@ import os
 import scipy.sparse as sp
 import tensorflow as tf
 import time
+import random
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -91,7 +92,7 @@ for i in range(param['nb_run']):
         'features': tf.sparse_placeholder(tf.float32),
         'adj': tf.sparse_placeholder(tf.float32),
         'adj_orig': tf.sparse_placeholder(tf.float32),
-        'dropout': tf.placeholder_with_default(0., shape = ())
+        'dropout': tf.placeholder_with_default(0., shape = ()),
     }
 
     ModelDict = {
@@ -155,6 +156,7 @@ for i in range(param['nb_run']):
         # Construct feed dictionary
         feedDict = constructFeedDict(adjNorm, adjLabel, features, placeholders)
         feedDict.update({placeholders['dropout']: param['dropout']})
+
         # Weights update
         outs = sess.run([opt.optOp, opt.cost, opt.accuracy], feed_dict = feedDict)
         # Compute average loss

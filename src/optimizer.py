@@ -1,4 +1,5 @@
 import tensorflow as tf
+from util.metrics import *
 
 class OptimizerAE(object):
     """ Optimizer for non-variational autoencoders """
@@ -53,10 +54,12 @@ class OptimizerHVAE(object):
                                                      pos_weight = posWeight))
         # Adam Optimizer
         self.optimizer = tf.train.AdamOptimizer(learning_rate = param['learning_rate'])
+        self.hsic = HSIC(params['dimension'])(model.z)
+
         # Latent loss
         self.logLik = self.cost
         self.negkl = (0.5 / numNodes) * tf.reduce_mean(tf.reduce_sum(1 + 2 * model.zLogStd - tf.square(model.zMean) - tf.square(tf.exp(model.zLogStd)), 1))
-        self.hsic = model.hsic * numNodes
+        self.hsic = tf.reduce_sum(self.hsic) * params['dimension'] * params['dimension']
         self.cost = self.logLik - params['beta'] * self.negkl + params['gamma'] * self.hsic
 
         self.optOp = self.optimizer.minimize(self.cost)

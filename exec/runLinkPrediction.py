@@ -12,6 +12,7 @@ import os
 import scipy.sparse as sp
 import tensorflow as tf
 import time
+import random
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -22,7 +23,7 @@ param = {
     'model': 'gcn_std_hvae',              # 'gcn_ae', 'gcn_vae', 'linear_ae', 'linear_vae', 'deep_gcn_ae', 'deep_gcn_vae', 'gcn_mean_vae', 'gcn_std_vae', 'gcn_std_hvae
     # model parameters
     'dropout': 0.,                  # Dropout rate (1 - keep probability)
-    'epochs': 100,
+    'epochs': 200,
     'features': True,
     'learning_rate': 0.01,
     'hidden': 32,                   # Number of units in GCN hidden layer(s)
@@ -126,7 +127,7 @@ for i in range(param['nb_run']):
     norm = adj.shape[0] * adj.shape[0] / float((adj.shape[0] * adj.shape[0] - adj.sum()) * 2)
 
     with tf.name_scope('optimizer'):
-        # Optimizer for Non-Variational Autoencoders
+    # Optimizer for Non-Variational Autoencoders
         if param['model'] in ('gcn_ae', 'linear_ae', 'deep_gcn_ae'):
             opt = OptimizerAE(params = param,
                               preds = model.reconstructions,
@@ -170,14 +171,14 @@ for i in range(param['nb_run']):
         # Construct feed dictionary
         feedDict = constructFeedDict(adjNorm, adjLabel, features, placeholders)
         feedDict.update({placeholders['dropout']: param['dropout']})
-        # Weights update
-        outs = sess.run([opt.optOp, opt.cost, opt.accuracy], feed_dict = feedDict)
+        outs = sess.run([opt.optOp, opt.cost, opt.accuracy, opt.logLik, opt.negkl, opt.hsic], feed_dict = feedDict)
 
         # Compute average loss
         avgCost = outs[1]
         if param['verbose']:
             # Display epoch information
-            print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(avgCost))
+            #print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(avgCost))
+            print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.3f}".format(outs[1]),"loglik=", "{:.3f}".format(outs[3]),"negkl=", "{:.3f}".format(outs[4]),"hsic=", "{:.3f}".format(outs[5]))
             # Validation, for Link Prediction
             if not param['kcore'] and param['validation']:
                 feedDict.update({placeholders['dropout']: 0})
@@ -201,14 +202,6 @@ for i in range(param['nb_run']):
     # Compute mean total running time
     meanTime.append(time.time() - tStart)
 
-
-    # print the reconstruction/KL loss and KL for single z_j
-    printll = tf.Print(opt.logLik, [opt.logLik])
-    print(sess.run(printll, feed_dict=feedDict))
-    printkl = tf.Print(opt.negkl, [opt.negkl])
-    print(sess.run(printkl, feed_dict=feedDict))
-    printhsic = tf.Print(opt.hsic, [opt.hsic])
-    print(sess.run(printhsic, feed_dict=feedDict))
     '''
     printz = tf.Print(model.z, [model.z, model.z.shape])
     allData = sess.run(printz, feed_dict=feedDict)
