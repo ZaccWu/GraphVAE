@@ -12,7 +12,6 @@ import os
 import scipy.sparse as sp
 import tensorflow as tf
 import time
-import random
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
